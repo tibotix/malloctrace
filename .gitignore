@@ -1,0 +1,4 @@
+.vscode/
+build/
+.gdb_history
+test/main
