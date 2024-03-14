@@ -6,14 +6,11 @@
 
 #include "logging.h"
 
-void* MALLOCTRACE_DEBUG_MAP_PAGE = 0x0;
-
 HeapMap* heap_map_new(size_t size) {
   assert(size != 0x0);
   if (size <= sizeof(HeapMap)) return NULL;
   void* map_page = mmap(NULL, size, PROT_READ | PROT_WRITE,
                         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  MALLOCTRACE_DEBUG_MAP_PAGE = map_page;
   if (map_page == MAP_FAILED) {
     return NULL;
   }
