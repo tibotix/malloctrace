@@ -19,8 +19,6 @@ class _FunctionalCommand(gdb.Command):
         try:
             args = self.parse_argument(argument)
             return self.function(args)
-        except Exception as e:
-            print(f"{self.__name__!s}: {e!s}")
         except SystemExit:
             pass
         return None
