@@ -6,23 +6,23 @@
 #include "backtrace.h"
 
 typedef struct {
-  void* address;
-  size_t size;
+    void* address;
+    size_t size;
 } Chunk;
 
 typedef struct {
-  Chunk chunk;
-  bt backtrace;
+    Chunk chunk;
+    bt backtrace;
 } AllocationDesc;
 
 typedef struct {
-  Chunk chunk;
+    Chunk chunk;
 } DeallocationDesc;
 
 typedef struct {
-  void* base;
-  size_t size;
-  AllocationDesc* head;
+    void* base;
+    size_t size;
+    AllocationDesc* head;
 } HeapMap;
 
 HeapMap* heap_map_new(size_t size);
