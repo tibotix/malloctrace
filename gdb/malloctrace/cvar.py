@@ -268,7 +268,7 @@ class CPointerSymbolVar(CSymbolVar, CPointerVar):
 
 class CStructSymbolVar(CSymbolVar, CStructVar):
     def __init__(self, name: str, fields: List[CStructField]=None, objfile_getter=None):
-        CSymbolVar.__init__(self, name, type_converter=VoidPointerTypeConverter, objfile_getter=objfile_getter)
+        CSymbolVar.__init__(self, name, type_converter=VoidTypeConverter, objfile_getter=objfile_getter)
         CStructVar.__init__(self, fields=fields)
 
 class CArraySymbolVar(CSymbolVar, CArrayVar):
