@@ -16,9 +16,9 @@
 HeapMap* MALLOCTRACE_HEAP_MAP;
 
 #define ERR_UNINITIALIZED -1
-#define ERR_OK 0
-#define ERR_MAP_SIZE 1
-#define ERR_MAP_ALLOC 2
+#define ERR_NONE          0
+#define ERR_MAP_SIZE      1
+#define ERR_MAP_ALLOC     2
 int8_t MALLOCTRACE_ERR_CODE = ERR_UNINITIALIZED;
 
 uint8_t MALLOCTRACE_ACTIVE = 0;
