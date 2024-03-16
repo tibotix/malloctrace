@@ -1,5 +1,6 @@
 from typing import Type
 import functools
+from malloctrace.logging import malloctrace_error
 
 
 def on_error_show_message(error_class: Type[Exception], msg: str):
@@ -9,7 +10,7 @@ def on_error_show_message(error_class: Type[Exception], msg: str):
             try:
                 func(*args, **kwargs)
             except error_class as e:
-                print(msg)
+                malloctrace_error(msg)
         return _wrapper
     return _decorator
 
@@ -20,6 +21,6 @@ def on_error_show_error_message(error_class: Type[Exception]):
             try:
                 func(*args, **kwargs)
             except error_class as e:
-                print(str(e))
+                malloctrace_error(str(e))
         return _wrapper
     return _decorator
