@@ -1,8 +1,9 @@
 from malloctrace.command import command, argparser
-from malloctrace.exceptions import on_error_show_message, on_error_show_error_message
-from malloctrace.common import get_malloctrace_objfile, has_process, assert_malloctrace_loaded, MALLOCTRACE_OBJFILE_NAME, ERR_CODES
+from malloctrace.exceptions import on_error_show_error_message
+from malloctrace.common import get_malloctrace_objfile, has_process, assert_malloctrace_loaded, MALLOCTRACE_OBJFILE_NAME, ERR_CODES, get_symbol_for_address, bt_line_for_address
 from malloctrace.environment import get_ld_preload, set_ld_preload
 from malloctrace.ctypedefs import *
+from malloctrace.logging import _address, _highlight, _function, _filename, _reset, _color_bool, _blue, malloctrace_warning, malloctrace_info
 
 
 @command.GDBPrefixCommand("malloctrace", "Trace Heap", aliases=["mtrace", "mtr"])
@@ -22,7 +23,7 @@ def malloctrace_on(_):
         if get_malloctrace_objfile() is not None:
             MALLOCTRACE_ACTIVE.set(1)
             return
-        print("No Malloctrace objfile present. The change will take place only after you restart your program.")
+        malloctrace_warning("No Malloctrace objfile present. The change will take place only after you restart your program.")
 
 
 @command.GDBSubCommand("malloctrace off", "disable malloctrace", short_description="disable malloctrace")
@@ -37,11 +38,13 @@ def malloctrace_off(_):
         if get_malloctrace_objfile() is not None:
             MALLOCTRACE_ACTIVE.set(0)
             return
-        print("No Malloctrace objfile present. The change will take place only after you restart your program.")
+        malloctrace_warning("No Malloctrace objfile present. The change will take place only after you restart your program.")
 
 
 @command.GDBSubCommand("malloctrace clear", "clear the heap map", short_description="clear the heap map")
+@on_error_show_error_message(ValueError)
 def malloctrace_clear(_):
+    assert_malloctrace_loaded()
     heap_map = MALLOCTRACE_HEAP_MAP.get_dereferenced_cvar()
     base = heap_map.get_field("base")
     heap_map.set_field("head", base)
@@ -51,12 +54,26 @@ def malloctrace_clear(_):
 @on_error_show_error_message(Exception)
 def malloctrace_status(_):
     assert_malloctrace_loaded()
-    is_active = bool(MALLOCTRACE_ACTIVE.get())
+    is_active = _color_bool(bool(MALLOCTRACE_ACTIVE.get()))
     err_code = MALLOCTRACE_ERR_CODE.get()
     err_code = ERR_CODES.get(err_code, "Unknown")
     print(f"Active: {str(is_active)}")
     print(f"Error code: {err_code!s}")
 
+@command.GDBSubCommand("malloctrace capacity", "show heap map capacity", short_description="show heap map capacity")
+@on_error_show_error_message(Exception)
+def malloctrace_capacity(_):
+    assert_malloctrace_loaded()
+    heap_map = MALLOCTRACE_HEAP_MAP.get_dereferenced_cvar()
+    base = heap_map.get_field("base")
+    head = heap_map.get_field("head")
+    size = heap_map.get_field("size")
+    total_capacity = size
+    free_capacity = (base + size) - head
+    total_entries_capacity = total_capacity // MALLOCTRACE_HEAP_MAP.value_size_in_bytes
+    free_entries_capacity = free_capacity // MALLOCTRACE_HEAP_MAP.value_size_in_bytes
+    print(f"total capacity: {_blue(hex(total_capacity))} bytes / {_blue(hex(total_entries_capacity))} backtrace entries")
+    print(f"free capacity: {_blue(hex(free_capacity))} bytes / {_blue(hex(free_entries_capacity))} backtrace entries")
 
 parser = argparser.GDBArgumentParser(
     prog="malloctrace show",
@@ -67,7 +84,10 @@ parser = argparser.GDBArgumentParser(
 parser.add_argument("start_addr")
 parser.add_argument("end_addr")
 @command.GDBSubCommand("malloctrace show", parser)
+@on_error_show_error_message(Exception)
 def malloctrace_show(args):
+    # TODO: make this command not reapeating, and instead paginating
+    assert_malloctrace_loaded()
     heap_map = MALLOCTRACE_HEAP_MAP.get_dereferenced_cvar()
     base = heap_map.get_field("base")
     head = heap_map.get_field("head")
@@ -76,10 +96,13 @@ def malloctrace_show(args):
     while addr < head:
         allocation_desc = AllocationDescCStruct(address=addr)
         chunk = allocation_desc.get_field("chunk")
-        bt_0 = allocation_desc.get_field("bt_0")
-        bt_1 = allocation_desc.get_field("bt_1")
-        print(f"addr: {hex(addr)}")
-        print(f"chunk: {chunk!s}")
-        print(f"bt_0: {bt_0!s}")
-        print(f"bt_1: {bt_1!s}")
+        backtrace = allocation_desc.get_field("backtrace")
+
+        chunk_addr = chunk["address"]
+        chunk_size = chunk["size"]
+        print(f"{_reset}------------------")
+        print(f"{_reset}Chunk @ {_address(hex(chunk_addr))} - size: {hex(chunk_size)}")
+        for index, frame_pc in enumerate(backtrace):
+            print(f"{_reset}#{index!s}  {bt_line_for_address(frame_pc)}")
+
         addr += allocation_desc.value_size_in_bytes
