@@ -1,5 +1,6 @@
 from typing import Optional
 import gdb
+from malloctrace.logging import _address, _function, _filename
 
 
 # TODO: let the user change this
@@ -31,3 +32,21 @@ def assert_malloctrace_loaded():
         raise ValueError("No Program is running")
     if get_malloctrace_objfile() is None:
         raise ValueError("No Malloctrace objfile present")
+
+def get_symbol_for_address(address):
+    symbol = gdb.execute(f"info symbol {hex(address)}", to_string=True)
+    if symbol.startswith("No symbol"):
+      return "<Unknwon>"
+    symbol = symbol.split(" ", 3)
+    offset = '+' + hex(int(symbol[2])) if symbol[1] == '+' else ""
+    return f"{symbol[0]}{offset}"
+
+def bt_line_for_address(address):
+    sal = gdb.current_progspace().find_pc_line(address)
+    symbol = _function(get_symbol_for_address(address))
+    address = _address(hex(address))
+    if sal.symtab is None:
+        return f"{address} in {symbol} ()"
+    source_line = sal.line
+    source_file = sal.symtab.filename
+    return f"{address} in {symbol} () at {_filename(source_file)}:{source_line}"
