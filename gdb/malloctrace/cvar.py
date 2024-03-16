@@ -79,6 +79,10 @@ class CVar:
     @address.setter
     def address(self, addr: int):
         self._address = addr
+
+    def _assert_has_address(self):
+        if self.address is None:
+            raise ValueError("This CVar has no address, but it needs one to get/set values.")
     
     @property
     def value_size_in_bytes(self):
@@ -126,7 +130,6 @@ class CStructVar(CVar):
         cvar: CVar
         offset: Optional[int] = None
 
-
     def __init__(self, fields: List[CStructField]=None, address: int=None):
         assert fields is not None, "Please specify fields"
         assert len(set(map(lambda f:f.name, fields))) == len(fields), "struct field names must be unique"
@@ -152,10 +155,6 @@ class CStructVar(CVar):
                 field.cvar.address = next_address
             next_address = field.cvar.address + field.cvar.value_size_in_bytes
         self._total_size = next_address - self.address
-    
-    def _assert_has_address(self):
-        if self.address is None:
-            raise ValueError("This CStructVar has no address, but it needs one to get/set values.")
     
     @property
     def value_size_in_bytes(self):
@@ -186,6 +185,50 @@ class CStructVar(CVar):
         value = dict()
         for field in self.fields:
             value[field.name] = field.cvar.get()
+        return value
+
+
+class CArrayVar(CVar):
+    @classmethod
+    def bind_with_contained_cvar_type(cls, contained_cvar_type: Type[CVar]):
+        return partialclass(cls, *tuple(), **{"contained_cvar_type": contained_cvar_type})
+
+    @classmethod
+    def bind_with_size(cls, size:int=None):
+        return partialclass(cls, *tuple(), **{"size": size})
+
+    def __init__(self, contained_cvar_type: Type[CVar]=None, size:int=None, address:int = None):
+        assert contained_cvar_type is not None, "Please specify contained_cvar_type"
+        assert size is not None, "Please specify size"
+        self.contained_cvar = contained_cvar_type()
+        self.size = size
+        super().__init__(VoidTypeConverter, address=address)
+
+    @property
+    def value_size_in_bytes(self):
+        return self.contained_cvar.value_size_in_bytes * self.size
+
+    def set_index(self, index: int, value):
+        self._assert_has_address()
+        element_address = self.address + (self.contained_cvar.value_size_in_bytes * index)
+        self.contained_cvar.address = element_address
+        self.contained_cvar.set(value)
+
+    def get_index(self, index: int):
+        self._assert_has_address()
+        element_address = self.address + (self.contained_cvar.value_size_in_bytes * index)
+        self.contained_cvar.address = element_address
+        return self.contained_cvar.get()
+
+    def set(self, value: list):
+        assert len(value) == self.size, "Please use an array that has the same size as specified"
+        for index, element in value:
+            self.set_index(index, element)
+
+    def get(self) -> list:
+        value = list()
+        for index in range(self.size):
+            value.append(self.get_index(index))
         return value
     
 
@@ -228,6 +271,11 @@ class CStructSymbolVar(CSymbolVar, CStructVar):
         CSymbolVar.__init__(self, name, type_converter=VoidPointerTypeConverter, objfile_getter=objfile_getter)
         CStructVar.__init__(self, fields=fields)
 
+class CArraySymbolVar(CSymbolVar, CArrayVar):
+    def __init__(self, name: str, contained_cvar_type: Type[CVar]=None, size:int=None, objfile_getter=None):
+        CSymbolVar.__init__(self, name, type_converter=VoidTypeConverter, objfile_getter=objfile_getter)
+        CArrayVar.__init__(self, contained_cvar_type=contained_cvar_type, size=size)
+
 
 CUInt8 = CVar.bind_with_type_converter(UInt8TypeConverter)
 CInt8 = CVar.bind_with_type_converter(Int8TypeConverter)
@@ -236,6 +284,8 @@ CInt64 = CVar.bind_with_type_converter(Int64TypeConverter)
 CVoid = CVar.bind_with_type_converter(VoidTypeConverter)
 CVoidPointer = CPointerVar.bind_with_wrapped_cvar_type(CVoid)
 CUInt64Pointer = CPointerVar.bind_with_wrapped_cvar_type(CUInt64)
+CVoidPointerArray = CArrayVar.bind_with_contained_cvar_type(CVoidPointer)
+CUInt64Array = CArrayVar.bind_with_contained_cvar_type(CUInt64)
 
 CUInt8Symbol = CSymbolVar.bind_with_type_converter(UInt8TypeConverter)
 CInt8Symbol = CSymbolVar.bind_with_type_converter(Int8TypeConverter)
@@ -243,5 +293,7 @@ CUInt64Symbol = CSymbolVar.bind_with_type_converter(UInt64TypeConverter)
 CInt64Symbol = CSymbolVar.bind_with_type_converter(Int64TypeConverter)
 CVoidPointerSymbol = CPointerSymbolVar.bind_with_wrapped_cvar_type(CVoid)
 CUInt64PointerSymbol = CPointerSymbolVar.bind_with_type_converter(CUInt64)
+CVoidPointerArraySymbol = CArraySymbolVar.bind_with_contained_cvar_type(CVoidPointer)
+CUInt64ArraySymbol = CArraySymbolVar.bind_with_contained_cvar_type(CUInt64)
 
 
