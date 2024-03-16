@@ -9,10 +9,10 @@ MALLOCTRACE_OBJFILE_NAME = "/home/tibotix/Projects/malloctrace/build/libmalloctr
 MAX_BACKTRACE_FRAMES = 0x4
 
 ERR_CODES = {
-    "-1": "ERR_UNITIIALIZED",
-    "0": "ERR_OK",
-    "1": "ERR_MAP_SIZE",
-    "2": "ERR_MAP_ALLOC",
+    -1: "ERR_UNITIIALIZED",
+    0: "ERR_NONE",
+    1: "ERR_MAP_SIZE",
+    2: "ERR_MAP_ALLOC",
 }
 
 
