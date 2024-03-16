@@ -1,6 +1,6 @@
 
 from malloctrace.cvar import *
-from malloctrace.common import get_malloctrace_objfile
+from malloctrace.common import get_malloctrace_objfile, MAX_BACKTRACE_FRAMES
 
 
 
@@ -22,11 +22,7 @@ ChunkCStruct = CStructVar.bind_with_fields([
 # } bt;
 AllocationDescCStruct = CStructVar.bind_with_fields([
     CStructField(name="chunk", cvar_type=ChunkCStruct),
-    CStructField(name="bt_0", cvar_type=CVoidPointer),
-    CStructField(name="bt_1", cvar_type=CVoidPointer),
-    CStructField(name="bt_2", cvar_type=CVoidPointer),
-    CStructField(name="bt_3", cvar_type=CVoidPointer),
-    CStructField(name="bt_4", cvar_type=CVoidPointer),
+    CStructField(name="backtrace", cvar_type=CUInt64Array.bind_with_size(MAX_BACKTRACE_FRAMES)),
 ])
 
 # typedef struct {

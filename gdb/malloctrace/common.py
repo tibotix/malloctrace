@@ -6,6 +6,7 @@ import gdb
 # MALLOCTRACE_OBJFILE_NAME = "libmalloctrace.so"
 # NOTE: Only for development
 MALLOCTRACE_OBJFILE_NAME = "/home/tibotix/Projects/malloctrace/build/libmalloctrace.so"
+MAX_BACKTRACE_FRAMES = 0x4
 
 ERR_CODES = {
     "-1": "ERR_UNITIIALIZED",
