@@ -1,27 +1,20 @@
 from typing import Optional
 import gdb
-from malloctrace.logging import _address, _function, _filename
-
-
-# TODO: let the user change this
-# MALLOCTRACE_OBJFILE_NAME = "libmalloctrace.so"
-# NOTE: Only for development
-MALLOCTRACE_OBJFILE_NAME = "/home/tibotix/Projects/malloctrace/build/libmalloctrace.so"
-MAX_BACKTRACE_FRAMES = 0x4
-
-ERR_CODES = {
-    -1: "ERR_UNITIIALIZED",
-    0: "ERR_NONE",
-    1: "ERR_MAP_SIZE",
-    2: "ERR_MAP_ALLOC",
-}
+from malloctrace.logging import _address, _function, _filename, malloctrace_warning
+from malloctrace.params import MALLOCTRACE_OBJFILE_NAME_PARAM
 
 
 def get_malloctrace_objfile() -> Optional[gdb.Objfile]:
     try:
-        return gdb.lookup_objfile(MALLOCTRACE_OBJFILE_NAME)
+        return gdb.lookup_objfile(MALLOCTRACE_OBJFILE_NAME_PARAM.value)
     except ValueError:
         return None
+
+def has_malloctrace_objfile_loaded() -> bool:
+    return get_malloctrace_objfile() is not None
+
+def warn_no_malloctrace_objfile_loaded_and_defered_change():
+    malloctrace_warning("No Malloctrace objfile present. The change will take place only after you restart your program.")
 
 def has_process():
     inferior = gdb.selected_inferior()
@@ -50,3 +43,13 @@ def bt_line_for_address(address):
     source_line = sal.line
     source_file = sal.symtab.filename
     return f"{address} in {symbol} () at {_filename(source_file)}:{source_line}"
+
+def parse_number(number: str) -> int:
+    if not isinstance(number, str):
+        raise ValueError(f"{number!s} is not a string.")
+    try:
+        if number.startswith("0x"):
+            return int(number[2:], 16)
+        return int(number)
+    except (ValueError, TypeError):
+        raise ValueError(f"{number!s} is not a valid number")

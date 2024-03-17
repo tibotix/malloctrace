@@ -88,13 +88,22 @@ class CVar:
     def value_size_in_bytes(self):
         return self.type_converter.value_size_in_bytes
     
+    def get_tobytes(self, writeable=False) -> bytes:
+        buffer = gdb.selected_inferior().read_memory(self.address, self.value_size_in_bytes).tobytes()
+        if writeable:
+            buffer = bytearray(buffer)
+        return buffer
+    
+    def set_frombytes(self, value_in_bytes: bytes):
+        assert len(value_in_bytes) == self.value_size_in_bytes, "len(value_in_bytes) == self.value_size_in_bytes"
+        gdb.selected_inferior().write_memory(self.address, value_in_bytes, self.value_size_in_bytes)
+    
     def set(self, value):
         value_in_bytes = self.type_converter.convert_to_bytes(value)
-        gdb.selected_inferior().write_memory(self.address, value_in_bytes, self.value_size_in_bytes)
+        self.set_frombytes(value_in_bytes)
 
     def get(self):
-        value_in_bytes = gdb.selected_inferior().read_memory(self.address, self.value_size_in_bytes).tobytes()
-        return self.type_converter.convert_from_bytes(value_in_bytes)
+        return self.type_converter.convert_from_bytes(self.get_tobytes())
 
 
 class CPointerVar(CVar):

@@ -21,7 +21,7 @@ def get_gdb_style_color_for_categroy(category: str):
 
 def _color_code_wrapper(color_code):
     def wrapper(msg: str):
-        return color_code + msg + _reset
+        return _reset + color_code + msg + _reset
     return wrapper
 
 

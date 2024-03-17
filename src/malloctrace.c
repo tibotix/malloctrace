@@ -130,7 +130,7 @@ ALWAYS_INLINE static void handle_malloc(void* ptr, size_t size) {
     ENTER_HANDLER_SECTION(MALLOC);
     AllocationDesc allocation = {.chunk = {.address = ptr, .size = size}, .backtrace = get_backtrace()};
     if (heap_map_insert(MALLOCTRACE_HEAP_MAP, &allocation) == -1) {
-        malloctrace_error("Couldn't insert into heap map: OutOfMemory!\n");
+        malloctrace_warning("Couldn't insert into heap map: OutOfMemory!\n");
     }
     LEAVE_HANDLER_SECTION(MALLOC);
 }
@@ -156,7 +156,7 @@ ALWAYS_INLINE static void handle_calloc(void* ptr, size_t nmemb, size_t size) {
     ENTER_HANDLER_SECTION(CALLOC);
     AllocationDesc allocation = {.chunk = {.address = ptr, .size = nmemb * size}, .backtrace = get_backtrace()};
     if (heap_map_insert(MALLOCTRACE_HEAP_MAP, &allocation) == -1) {
-        malloctrace_error("Couldn't insert into heap map: OutOfMemory!\n");
+        malloctrace_warning("Couldn't insert into heap map: OutOfMemory!\n");
     }
     LEAVE_HANDLER_SECTION(CALLOC);
 }

@@ -1,6 +1,7 @@
 
 from malloctrace.cvar import *
-from malloctrace.common import get_malloctrace_objfile, MAX_BACKTRACE_FRAMES
+from malloctrace.common import get_malloctrace_objfile
+from malloctrace.constants import MAX_BACKTRACE_FRAMES
 
 
 
@@ -39,4 +40,5 @@ HeapMapCStruct = CStructVar.bind_with_fields([
 
 MALLOCTRACE_ACTIVE = CUInt8Symbol("MALLOCTRACE_ACTIVE", objfile_getter=get_malloctrace_objfile)
 MALLOCTRACE_ERR_CODE = CInt8Symbol("MALLOCTRACE_ERR_CODE", objfile_getter=get_malloctrace_objfile)
+MALLOCTRACE_LOG_LEVEL = CUInt8Symbol("MALLOCTRACE_LOG_LEVEL", objfile_getter=get_malloctrace_objfile)
 MALLOCTRACE_HEAP_MAP = CPointerSymbolVar("MALLOCTRACE_HEAP_MAP", wrapped_cvar_type=HeapMapCStruct, objfile_getter=get_malloctrace_objfile)
