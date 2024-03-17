@@ -88,18 +88,18 @@ AllocationDesc* heap_map_search(HeapMap* map, Chunk* chunk) {
     return search_data.found;
 }
 
-void heap_map_for_each(HeapMap* map, int (*f)(AllocationDesc*, void*), void* data) {
+void heap_map_for_each(HeapMap* map, ForEachCallback callback, void* data) {
     for (AllocationDesc* ptr = map->base; ptr < map->head; ptr += 1) {
-        if (f(ptr, data) == -1) {
+        if (callback(ptr, data) == -1) {
             return;
         }
     }
 }
 
-void heap_map_for_each_in_range(HeapMap* map, Chunk* start_chunk, Chunk* end_chunk, int (*f)(AllocationDesc*, void*), void* data) {
+void heap_map_for_each_in_range(HeapMap* map, Chunk* start_chunk, Chunk* end_chunk, ForEachCallback callback, void* data) {
     for (AllocationDesc* ptr = map->base; ptr < map->head; ptr += 1) {
         if (start_chunk->address <= ptr->chunk.address && ptr->chunk.address <= end_chunk->address) {
-            if (f(ptr, data) == -1) {
+            if (callback(ptr, data) == -1) {
                 return;
             }
         }

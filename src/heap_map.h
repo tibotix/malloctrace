@@ -41,5 +41,6 @@ void heap_map_clear(HeapMap* map);
 CapacityDesc heap_map_capacity(HeapMap* map);
 
 AllocationDesc* heap_map_search(HeapMap* map, Chunk* chunk);
-void heap_map_for_each(HeapMap* map, int (*f)(AllocationDesc*, void*), void* data);
-void heap_map_for_each_in_range(HeapMap* map, Chunk* start_chunk, Chunk* end_chunk, int (*f)(AllocationDesc*, void*), void* data);
+typedef int (*ForEachCallback)(AllocationDesc*, void*);
+void heap_map_for_each(HeapMap* map, ForEachCallback callback, void* data);
+void heap_map_for_each_in_range(HeapMap* map, Chunk* start_chunk, Chunk* end_chunk, ForEachCallback callback, void* data);
