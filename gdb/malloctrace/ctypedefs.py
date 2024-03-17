@@ -1,8 +1,6 @@
-
 from malloctrace.cvar import *
 from malloctrace.common import get_malloctrace_objfile
 from malloctrace.constants import MAX_BACKTRACE_FRAMES
-
 
 
 # typedef struct {
