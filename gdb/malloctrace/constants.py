@@ -1,7 +1,8 @@
 
 
-
+# TODO: let the user change this
 MAX_BACKTRACE_FRAMES = 0x4
+
 DEFAULT_MAP_SIZE = 0x4000
 DEFAULT_LOG_LEVEL = "error"
 
