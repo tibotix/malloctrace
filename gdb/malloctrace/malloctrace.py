@@ -1,6 +1,6 @@
 from malloctrace.command import command, argparser
 from malloctrace.exceptions import on_error_show_error_message
-from malloctrace.common import get_malloctrace_objfile, has_process, assert_malloctrace_loaded, bt_line_for_address, has_malloctrace_objfile_loaded, warn_no_malloctrace_objfile_loaded_and_defered_change
+from malloctrace.common import has_process, assert_malloctrace_loaded, bt_line_for_address, has_malloctrace_objfile_loaded, warn_no_malloctrace_objfile_loaded_and_defered_change, parse_number
 from malloctrace.constants import ERR_CODES, LOG_LEVELS, REVERSE_LOG_LEVELS, DEFAULT_LOG_LEVEL
 from malloctrace.environment import get_ld_preload, set_ld_preload, inferior_set_env, inferior_get_env
 from malloctrace.ctypedefs import *
@@ -50,7 +50,7 @@ parser = argparser.GDBArgumentParser(
     short_description="get/set malloctrace log level",
     add_help=False,
 )
-parser.add_argument("log_level", help="Set current Log Level. Possibly values: 'none','debug','info','warning','error'.", nargs="?")
+parser.add_argument("log_level", type=str, help="Set current Log Level. Possibly values: 'none','debug','info','warning','error'.", nargs="?")
 @command.GDBSubCommand("malloctrace loglevel", parser)
 @on_error_show_error_message(ValueError)
 def malloctrace_log_level(args):
@@ -126,10 +126,9 @@ parser = argparser.GDBArgumentParser(
     short_description="show heap map",
     add_help=False
 )
-# TODO: allow hex value
-parser.add_argument("start_addr", type=int, help="The address to begin with")
-parser.add_argument("end_addr", type=int, help="The address to end with")
-parser.add_argument("count", type=int, help="The number of chunks to print", nargs="?", default=10)
+parser.add_argument("start_addr", type=parse_number, help="The address to begin with")
+parser.add_argument("end_addr", type=parse_number, help="The address to end with")
+parser.add_argument("count", type=parse_number, help="The number of chunks to print", nargs="?", default=10)
 @command.GDBPrefixCommand("malloctrace show", parser)
 @on_error_show_error_message(Exception)
 def malloctrace_show(args):
